@@ -10,7 +10,9 @@ arr_foreign_key = [
 "ALTER TABLE `Paintings` ADD CONSTRAINT `Painting_fk2` FOREIGN KEY (`painting_styles_id`) REFERENCES `Painting styles`(`id`);",
 "ALTER TABLE `Paintings` ADD CONSTRAINT `Painting_fk3` FOREIGN KEY (`periods_id`) REFERENCES `Historical periods`(`id`);",
 "ALTER TABLE `Painting by artists` ADD CONSTRAINT `Painting by artists_fk0` FOREIGN KEY (`artist_id`) REFERENCES `Artists`(`id`);",
-"ALTER TABLE `Painting by artists` ADD CONSTRAINT `Painting by artists_fk1` FOREIGN KEY (`paint_id`) REFERENCES `Paintings`(`id`);"
+"ALTER TABLE `Painting by artists` ADD CONSTRAINT `Painting by artists_fk1` FOREIGN KEY (`paint_id`) REFERENCES `Paintings`(`id`);",
+"ALTER TABLE `Tech by subtech` ADD CONSTRAINT `Tech by subtech_fk0` FOREIGN KEY (`tech_id`) REFERENCES `Technics`(`id`);",
+"ALTER TABLE `Tech by subtech` ADD CONSTRAINT `Tech by subtech_fk1` FOREIGN KEY (`subtech_id`) REFERENCES `Subtechnics`(`id`);"
 ]
 
 tables['Artists'] = (
@@ -31,7 +33,7 @@ CREATE TABLE if not exists `Paintings` (
 	`id` int NOT NULL AUTO_INCREMENT,
 	`name` TEXT NOT NULL,
 	`creating_date` int NOT NULL,
-	`cost_$m` int,
+	`cost_$m` float,
 	`technics_id` int,
 	`painting_styles_id` int,
 	`periods_id` int,
@@ -76,6 +78,22 @@ CREATE TABLE if not exists `Painting by artists` (
 )
 ''')
 
+tables['Subtechnics'] = (
+'''
+CREATE TABLE `Subtechnics` (
+	`id` int NOT NULL AUTO_INCREMENT,
+	`name` TEXT NOT NULL,
+	PRIMARY KEY (`id`)
+);
+''')
+
+tables['Tech by subtech'] = (
+'''
+CREATE TABLE `Tech by subtech` (
+	`tech_id` int NOT NULL,
+	`subtech_id` int NOT NULL
+);
+''')
 
 def create_database(cursor):
 	try:
@@ -234,9 +252,44 @@ def init_p_styles(cursor):
 	else :
 		print("Already added")
 
+def init_subtechiques(cursor):
+	cursor.execute("SELECT EXISTS (SELECT 1 FROM `Subtechnics`);")
+	size = cursor.fetchall()
+	if  size[0][0] == 0:
+		subtech = read_data_('./resources/Subtechnics.txt')
+		subtech_id = []
+		name = []
+		for m in re.finditer(r"(\d):(( +.+\n?)+)", subtech):
+		    subtech_id.append(int(m.group(1)))
+		    name.append(m.group(2).split('\n '))
+		name = [[s.strip().split(', ') for s in a] for a in name]
+
+		v_connect = []
+		values = []
+		inc = 1
+		for id in subtech_id:
+			for p_el in name[id-1]:
+				values.append( (p_el[0], ) )
+				# print(id , ':' , p_el[0])
+				v_connect.append((id,inc))
+				inc += 1
+		# print(v_connect)
+		add_subtech = (""" INSERT INTO Subtechnics
+						(name)
+						VALUES (%s)""")
+		cursor.executemany(add_subtech, values)
+
+		add_connection = (""" INSERT INTO `Tech by subtech`
+						(tech_id, subtech_id)
+						VALUES (%s, %s)""")
+		cursor.executemany(add_connection, v_connect)
+	else :
+		print("Already added")
+
 def initializing_db(cursor):
 	init_p_styles(cursor)
 	init_techniques(cursor)
+	init_subtechiques(cursor)
 	init_periods(cursor)
 	init_artists(cursor)
 	init_paintings(cursor)
