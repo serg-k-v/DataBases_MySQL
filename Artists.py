@@ -270,7 +270,7 @@ def init_subtechiques(cursor):
 		for id in subtech_id:
 			for p_el in name[id-1]:
 				values.append( (p_el[0], ) )
-				# print(id , ':' , p_el[0])
+					# print(id , ':' , p_el[0])
 				v_connect.append((id,inc))
 				inc += 1
 		# print(v_connect)
