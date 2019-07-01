@@ -4,7 +4,7 @@ from mysql.connector import errorcode
 import Artists as art
 
 DB_NAME = 'Art'
-# cnx = mysql.connector.connect(user='akuma', password='5s5e2r2g', database= DB_NAME)
+
 cnx = mysql.connector.connect(user='akuma', password='123456')
 cursor = cnx.cursor(buffered=True)
 
